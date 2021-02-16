@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./Wei.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        Count: <span id="count">{{ count }}</span>
+        Count: <span id="count">{{ count }}</span>
+        Count: <span id="count">{{ count }}</span>
+        Count: <span id="count">{{ count }}</span>
+
+
+        <button @click="addCount">Add</button>
+    </div>
+
+    <script>
+        let app = new Wei({
+            el: '#app',
+            data: {
+                count: 0,
+            },
+            method: {
+                addCount() {
+                    this.data.count++;
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
