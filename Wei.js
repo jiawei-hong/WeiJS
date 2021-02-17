@@ -22,23 +22,26 @@ class Wei {
     }
 
     build() {
-        let variableRegex = /{{(\s*[^}]*\s)}}/;
+        let variableRegex = /{{([^}]*)}}/g;
         let variableClickEventRegex = /<(.*)\s+@(click)+=\s*(?:"([^"]*)"+|'([^']*)')/;
-        let templateOuterHTML = this._cloneTemplate.outerHTML.split('\n');
         let variableEventArray = [];
+        let templateOuterHTML = this._cloneTemplate.outerHTML.split('\n');
+        let htmlTemp = [];
 
         for (let i = 0; i < templateOuterHTML.length; i++) {
-            let variableParse = templateOuterHTML[i].match(variableRegex);
+            let variableParse = templateOuterHTML[i].matchAll(variableRegex);
             let variableEvent = templateOuterHTML[i].match(variableClickEventRegex);
+            let variableReplace = Array.from(variableParse, x => [x[0],x[1].trim()]);
+            let _templateOuterHTML = templateOuterHTML[i];
 
-            if (variableParse !== null) {
-                variableParse[1] = variableParse[1].trim()
-
-                if (Object.keys(this.data).includes(variableParse[1])) {
-                    templateOuterHTML[i] = templateOuterHTML[i].replace(variableRegex, this.data[variableParse[1]]);
-                } else {
-                    throw TypeError(`Not Found Variable : ${variableParse[1]}`);
-                }
+            if(variableReplace.length > 0){
+                variableReplace.forEach(x => {
+                    if (Object.keys(this.data).includes(x[1])) {
+                        _templateOuterHTML = _templateOuterHTML.replace(x[0],this.data[x[1]]);
+                    } else {
+                        throw TypeError(`Not Found Variable : ${x[1]}`);
+                    }
+                });
             }
 
             if (variableEvent !== null) {
@@ -48,15 +51,17 @@ class Wei {
                     variableEvent[3]
                 ]);
             }
+
+            htmlTemp.push(_templateOuterHTML);
         }
 
         while (this.template.lastChild) {
             this.template.removeChild(this.template.lastChild);
         }
 
-        templateOuterHTML.splice(0, 1);
-        templateOuterHTML.pop();
-        this.template.innerHTML = templateOuterHTML.join('\n');
+        htmlTemp.splice(0, 1);
+        htmlTemp.pop();
+        this.template.innerHTML = htmlTemp.join('\n');
 
         variableEventArray.forEach(e => {
             let varaibleEvent = this.method[e[2]].toString().split('\n');
