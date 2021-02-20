@@ -22,57 +22,37 @@ class Wei {
     }
 
     build() {
-        let variableRegex = /{{([^}]*)}}/g;
-        let variableClickEventRegex = /<(.*)\s+@(click)+=\s*(?:"([^"]*)"+|'([^']*)')/;
-        let variableEventArray = [];
-        let templateOuterHTML = this._cloneTemplate.outerHTML.split('\n');
-        let htmlTemp = [];
+        let variableRegex = /{{([^}]*)}}/;
+        let variableEventsRegex = {
+            'click': /<(.*)\s+@(click)+=\s*(?:"([^"]*)"+|'([^']*)')/
+        };
 
-        for (let i = 0; i < templateOuterHTML.length; i++) {
-            let variableParse = templateOuterHTML[i].matchAll(variableRegex);
-            let variableEvent = templateOuterHTML[i].match(variableClickEventRegex);
-            let variableReplace = Array.from(variableParse, x => [x[0],x[1].trim()]);
-            let _templateOuterHTML = templateOuterHTML[i];
+        this._cloneTemplate.childNodes.forEach((x, i) => {
+            if (x.outerHTML !== undefined) {
+                let variableParse = x.outerHTML.match(variableRegex);
 
-            if(variableReplace.length > 0){
-                variableReplace.forEach(x => {
-                    if (Object.keys(this.data).includes(x[1])) {
-                        _templateOuterHTML = _templateOuterHTML.replace(x[0],this.data[x[1]]);
-                    } else {
-                        throw TypeError(`Not Found Variable : ${x[1]}`);
+                if (variableParse !== null) {
+                    let variable = variableParse[1];
+
+                    this.template.childNodes[i].innerText = this.data[variable.trim()];
+                } else if (!this.rendered) {
+                    for (let event in variableEventsRegex) {
+                        let variableEventParse = x.outerHTML.match(variableEventsRegex[event]);
+
+                        this.template.childNodes[i].addEventListener('click', () => {
+                            let variableEvent = this.method[variableEventParse[3]].toString().split('\n');
+
+                            variableEvent.splice(0, 1);
+                            variableEvent.pop();
+
+                            variableEvent.forEach(x => eval(x));
+                        });
                     }
-                });
+                }
             }
-
-            if (variableEvent !== null) {
-                variableEventArray.push([
-                    variableEvent[1],
-                    variableEvent[2],
-                    variableEvent[3]
-                ]);
-            }
-
-            htmlTemp.push(_templateOuterHTML);
-        }
-
-        while (this.template.lastChild) {
-            this.template.removeChild(this.template.lastChild);
-        }
-
-        htmlTemp.splice(0, 1);
-        htmlTemp.pop();
-        this.template.innerHTML = htmlTemp.join('\n');
-
-        variableEventArray.forEach(e => {
-            let varaibleEvent = this.method[e[2]].toString().split('\n');
-
-            varaibleEvent.splice(0, 1);
-            varaibleEvent.pop();
-
-            document.querySelector(e[0]).addEventListener(e[1], e => {
-                varaibleEvent.forEach(x => eval(x));
-            });
         });
+
+        this.rendered = true;
     }
 
     component(name, settings) {
