@@ -18,17 +18,40 @@
 
         <button @click="addCount">Add</button>
         <button @click="addCount">Add</button>
+        <button @click="reduceCount">reduce</button>
+
+        <ele-header></ele-header>
     </div>
 
     <script>
+        Wei.component('ele-header', {
+            template: `
+                        <div>
+                            header
+                        </div>
+                      `,
+            styles: [
+                {
+                    range: '*',
+                    style: {
+                        'color': 'cyan',
+                        'font-size': '80px'
+                    }
+                }
+            ],
+        });
+
         let app = new Wei({
             el: '#app',
             data: {
                 count: 0,
             },
-            method: {
+            methods: {
                 addCount() {
                     this.data.count++;
+                },
+                reduceCount() {
+                    this.data.count--;
                 }
             }
         });

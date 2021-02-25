@@ -1,13 +1,15 @@
 class Wei {
-    constructor(argv) {
-        this.el = argv.el;
-        this.data = argv.data;
-        this.template = document.querySelector(this.el);
-        this.method = argv.method;
-        this._cloneTemplate = this.template.cloneNode(true);
-        this.rendered = false;
-        this.registerVariableListen();
-        this.build();
+    constructor(...argvs) {
+        if (argvs.length > 0) {
+            this.el = argvs[0].el;
+            this.data = argvs[0].data;
+            this.template = document.querySelector(this.el);
+            this.methods = argvs[0].methods;
+            this._cloneTemplate = this.template.cloneNode(true);
+            this.rendered = false;
+            this.registerVariableListen();
+            this.build();
+        }
     }
 
     registerVariableListen() {
@@ -28,7 +30,7 @@ class Wei {
         };
 
         this._cloneTemplate.childNodes.forEach((x, i) => {
-            if (x.outerHTML !== undefined) {
+            if (x.outerHTML !== undefined && Object.getOwnPropertySymbols(Object.getPrototypeOf(x)).length > 0) {
                 let variableParse = x.outerHTML.match(variableRegex);
 
                 if (variableParse !== null) {
@@ -40,11 +42,10 @@ class Wei {
                         let variableEventParse = x.outerHTML.match(variableEventsRegex[event]);
 
                         this.template.childNodes[i].addEventListener('click', () => {
-                            let variableEvent = this.method[variableEventParse[3]].toString().split('\n');
+                            let variableEvent = this.methods[variableEventParse[3]].toString().split('\n');
 
                             variableEvent.splice(0, 1);
                             variableEvent.pop();
-
                             variableEvent.forEach(x => eval(x));
                         });
                     }
@@ -55,7 +56,35 @@ class Wei {
         this.rendered = true;
     }
 
-    component(name, settings) {
-        console.log(name, settings);
+    static component(name, instance) {
+        customElements.define(name, class extends HTMLElement {
+            constructor() {
+                super();
+
+                let html = ``;
+
+                if (Object.keys(instance).includes('styles')) {
+                    let styles = '<style>';
+
+                    instance['styles'].forEach(ele => {
+                        styles += `*{`;
+                        Object.keys(ele.style).forEach(obj => {
+                            styles += `${obj}:${ele.style[obj]};`;
+                        });
+
+                        styles += `}`;
+                    });
+
+                    styles += '</style>';
+                    html += styles;
+                }
+
+                html += instance['template'];
+
+                this.attachShadow({
+                    mode: 'open'
+                }).innerHTML = html;
+            }
+        });
     }
 }
