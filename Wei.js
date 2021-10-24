@@ -62,6 +62,7 @@ class Wei {
                 super();
 
                 let html = ``;
+                let componentVariableParseRule = /{(\w.+)}/g;
 
                 if (Object.keys(instance).includes('styles')) {
                     let styles = '<style>';
@@ -79,7 +80,15 @@ class Wei {
                     html += styles;
                 }
 
-                html += instance['template'];
+                if (instance.data !== undefined) {
+                    let instanceMatch = [...instance.template.matchAll(componentVariableParseRule)]
+
+                    instanceMatch.forEach(match => {
+                        instance.template = instance.template.replace(match[0], instance.data[match[1]]);
+                    });
+                }
+
+                html += instance.template;
 
                 this.attachShadow({
                     mode: 'open'

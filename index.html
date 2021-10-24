@@ -21,6 +21,7 @@
         <button @click="reduceCount">reduce</button>
 
         <ele-header></ele-header>
+        <counter-button></counter-button>
     </div>
 
     <script>
@@ -40,6 +41,25 @@
                 }
             ],
         });
+
+        Wei.component('counter-button', {
+            template: `
+                <div>
+                    {count}
+                </div>
+            `,
+            data: {
+                count: 0
+            },
+            methods: {
+                add() {
+
+                },
+                reduce() {
+
+                }
+            }
+        })
 
         let app = new Wei({
             el: '#app',
