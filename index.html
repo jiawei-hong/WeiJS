@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <script src="./Wei.js"></script>
+    <script src="./Component.js"></script>
 </head>
 
 <body>
@@ -16,50 +17,29 @@
         Count: <span>{{ count }}</span>
         Count: <span>{{ count }}</span>
 
-        <button @click="addCount">Add</button>
-        <button @click="addCount">Add</button>
-        <button @click="reduceCount">reduce</button>
+        <button @click="increment">Add</button>
+        <button @click="increment">Add</button>
+        <button @click="decrement">reduce</button>
 
         <ele-header></ele-header>
         <counter-button></counter-button>
     </div>
 
+    <app-test @click="test"></app-test>
+
     <script>
-        Wei.component('ele-header', {
-            template: `
-                        <div>
-                            header
-                        </div>
-                      `,
-            styles: [
-                {
-                    range: '*',
-                    style: {
-                        'color': 'cyan',
-                        'font-size': '80px'
-                    }
-                }
-            ],
-        });
-
-        Wei.component('counter-button', {
-            template: `
-                <div>
-                    {count}
-                </div>
-            `,
-            data: {
-                count: 0
-            },
-            methods: {
-                add() {
-
-                },
-                reduce() {
-
-                }
+        Component.create({
+            name: 'app-test',
+            template: '<button>{{data}}</button>'
+        })(class {
+            constructor() {
+                this.data = 0;
             }
-        })
+
+            test() {
+                this.instance.data++;
+            }
+        });
 
         let app = new Wei({
             el: '#app',
@@ -67,10 +47,10 @@
                 count: 0,
             },
             methods: {
-                addCount() {
+                increment() {
                     this.data.count++;
                 },
-                reduceCount() {
+                decrement() {
                     this.data.count--;
                 }
             }

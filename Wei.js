@@ -42,11 +42,7 @@ class Wei {
                         let variableEventParse = x.outerHTML.match(variableEventsRegex[event]);
 
                         this.template.childNodes[i].addEventListener('click', () => {
-                            let variableEvent = this.methods[variableEventParse[3]].toString().split('\n');
-
-                            variableEvent.splice(0, 1);
-                            variableEvent.pop();
-                            variableEvent.forEach(x => eval(x));
+                            this.methods[variableEventParse[3]].call(this);
                         });
                     }
                 }
@@ -61,14 +57,30 @@ class Wei {
             constructor() {
                 super();
 
+                this.data = instance.data;
+                this.build();
+            }
+
+            registerVariable(instance) {
+                this.data = new Proxy(instance, {
+                    set: (obj, x, y) => {
+                        obj[x] = y;
+
+                        return true;
+                    }
+                })
+            }
+
+            build() {
                 let html = ``;
                 let componentVariableParseRule = /{(\w.+)}/g;
+                this.data = instance.data;
 
                 if (Object.keys(instance).includes('styles')) {
                     let styles = '<style>';
 
                     instance['styles'].forEach(ele => {
-                        styles += `*{`;
+                        styles += `${ele.range}{`;
                         Object.keys(ele.style).forEach(obj => {
                             styles += `${obj}:${ele.style[obj]};`;
                         });
@@ -86,14 +98,20 @@ class Wei {
                     instanceMatch.forEach(match => {
                         instance.template = instance.template.replace(match[0], instance.data[match[1]]);
                     });
+
+                    this.registerVariable(instance.data);
+                }
+
+                if (instance.methods !== undefined) {
+                    this.data.count += 1;
                 }
 
                 html += instance.template;
 
                 this.attachShadow({
-                    mode: 'open'
+                    mode: 'open',
                 }).innerHTML = html;
-            }
+            };
         });
     }
 }
