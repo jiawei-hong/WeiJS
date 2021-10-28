@@ -1,14 +1,29 @@
 class Component {
     static create(params) {
         let component = new Component();
+
         component.selector = document.querySelector(params.name);
         component.name = params.name;
         component.template = params.template;
-
+        component.regex = {
+            'variable': /{{([^}]*)}}/g
+        };
 
         return service => {
             if (service !== undefined) {
-                component.instance = new service();
+                let params = new service();
+
+                for (let dataKey in params) {
+                    component[dataKey] = params[dataKey];
+                }
+
+                let functions = Object.getOwnPropertyNames(Object.getPrototypeOf(params))
+
+                functions.shift();
+
+                for (let functionKey of functions) {
+                    component[functionKey] = params[functionKey];
+                }
             }
 
             component.build();
@@ -26,21 +41,22 @@ class Component {
                 }
 
                 connectedCallback() {
-                    let variableRegex = /{{([^}]*)}}/g;
-                    let templateMatchVariable = [...template.matchAll(variableRegex)];
+                    let templateMatchVariable = [...template.matchAll(component.regex.variable)];
 
                     for (let variable of templateMatchVariable) {
-                        template = template.replace(variable[0], component.instance[variable[1]]);
+                        template = template.replace(variable[0], component[variable[1]]);
                     }
 
                     for (let event of this.getAttributeNames()) {
                         let eventName = event.substr(1, event.length - 1);
 
                         component.selector.addEventListener(eventName, function () {
-                            component.instance[this.getAttribute(event)].call(component);
+                            component[this.getAttribute(event)].call(component);
 
                             component.rebuild();
                         })
+
+                        component.selector.removeAttribute(event);
                     }
 
                     component.shadow = this.attachShadow({
@@ -56,11 +72,10 @@ class Component {
     rebuild() {
         let component = this;
         let template = component.template;
-        let variableRegex = /{{([^}]*)}}/g;
-        let templateMatchVariable = [...template.matchAll(variableRegex)];
+        let templateMatchVariable = [...template.matchAll(component.regex.variable)];
 
         for (let variable of templateMatchVariable) {
-            template = template.replace(variable[0], component.instance[variable[1]]);
+            template = template.replace(variable[0], component[variable[1]]);
         }
 
         component.shadow.innerHTML = template;
